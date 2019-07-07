@@ -71,6 +71,7 @@ This project uses the following products to be build and for function:
 **Components:**
 
     - RAD Designer/IDE
+    - Basic widget set
     - Source code manager (scaffolding)
     - Runtime library (events handling)
     - Build toolchain
