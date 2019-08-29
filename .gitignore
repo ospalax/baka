@@ -1,3 +1,16 @@
+#
+# project specific
+#
+
+.depend
+Makefile.custom
+build/
+NOTES.txt
+
+#
+# from template
+#
+
 # Prerequisites
 *.d
 
