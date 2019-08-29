@@ -1,0 +1,312 @@
+#!/bin/sh
+
+#
+# Copyright (2019) Petr Ospalý <petr@ospalax.cz>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+# globals
+MAKEFILE=Makefile.custom
+
+# control variables
+CMD=$(basename "$0")
+CUSTOM_CC= # leave empty
+
+#
+# functions
+#
+
+help()
+{
+    cat <<EOF
+NAME
+    ${CMD} - configure script for baka tool
+
+DESCRIPTION
+    This is nowhere close to the autotools configure script - baka has only
+    few requirements (C compiler and ncurses library) so this script is very
+    simple and naive.
+
+    If for some reasons the checking requirements part keeps failing but you
+    are certain that build will proceed fine and gcc/clang will find ncurses
+    where this script failed, then you can skip this part of the script with
+    the '--skip-checks'.
+
+    Optionally you can set the compiler before the checks are run with the
+    '--set-compiler' option. By doing this you will avoid the problem when
+    you have cc/gcc/clang compatible compiler but it is under unexpected
+    path or name. Setting up the PATH variable will also help. The CC
+    variable is also taken into account.
+
+    Basically this script only setup few variables for later use. It creates
+    ${MAKEFILE} which is then used during the build and also by install
+    script.
+
+    It is not mandatory to run configure script at all if you are happy with
+    the defaults. The script will either way run interactively and ask you
+    few questions.
+
+USAGE
+    ${CMD} -h|--help
+        This help
+
+    ${CMD} [--skip-checks] [--set-compiler <compiler>]
+        It will run the configure script
+
+        --skip-checks:      no avaibility check for compiler or ncurses
+        --set-compiler:     set this compiler as default
+
+EOF
+}
+
+check_compiler()
+{
+    # custom C compiler
+    if [ -n "$CC" ] ; then
+        if ! which "$CC" >/dev/null 2>&1 ; then
+            echo "ERROR: ${CC} does not exist (maybe check the PATH)" 1>&2
+            echo "       PATH=${PATH}" 1>&2
+            return 1
+        else
+            CUSTOM_CC="$CC"
+            return 0
+        fi
+    fi
+
+    # from Makefile.config
+    _cc=$(sed -n 's#[[:space:]]*CC[[:space:]]*=\(.*\)#\1#p' \
+        Makefile.config)
+    CUSTOM_CC=$(eval "echo ${_cc}")
+    if [ -n "$CUSTOM_CC" ] && which "$CUSTOM_CC" >/dev/null 2>&1 ; then
+        echo "INFO: '${CUSTOM_CC}' from Makefile.config is used"
+        return 0
+    else
+        CUSTOM_CC=
+    fi
+
+    # we guess one
+    for i in clang gcc cc ; do
+        if which ${i} >/dev/null 2>&1 ; then
+            CUSTOM_CC=${i}
+            echo "INFO: ${CUSTOM_CC} was found"
+            return 0
+        fi
+    done
+
+    if [ -z "$CUSTOM_CC" ] ; then
+        echo "ERROR: no C compiler found" 1>&2
+        return 1
+    fi
+
+    # this should not happen
+    return 1
+}
+
+check_curses()
+{
+    echo
+    set -x
+
+    {
+        cat <<EOF
+#include <ncurses.h>
+
+int main(void)
+{
+    initscr();
+    box(stdscr, '*', '*');
+    addstr(" CURSES COMPILER TEST ");
+    refresh();
+    getch();
+    endwin();
+    return 0;
+}
+
+EOF
+    } | $CUSTOM_CC -x c - -std=c99 -lncurses -o /dev/null
+
+    set +x
+    echo
+}
+
+# arg: <prompt> [<reply to incorrect value>]
+is_yes()
+{
+    _prompt="$1"
+    _reply="${2:-Incorrect reply! Type either Y/yes or N/no...}"
+
+    _answer=
+    while echo ; do
+        printf "${_prompt} (Yes/No): "
+        read -r _answer
+        case "$_answer" in
+            Y|y|Yes|yes|YES)
+                return 0
+                ;;
+            N|n|No|no|NO)
+                return 1
+                ;;
+            *)
+                printf "${_reply}\n"
+                ;;
+        esac
+    done
+}
+
+# arg: <prompt> [<default value>]
+ask_value()
+{
+    _prompt="$1"
+    _default="${2}"
+
+    _answer=
+    printf "${_prompt} (${_default:-default from Makefile.config}): "
+    read -r _answer
+    case "$_answer" in
+        '')
+            _VALUE="$_default"
+            ;;
+        *)
+            _VALUE="$_answer"
+            ;;
+    esac
+    echo
+}
+
+#
+# main
+#
+
+# parse arguments
+
+state=nil
+arg_skipchecks=
+arg_compiler=
+while [ -n "$1" ] ; do
+    case $state in
+        nil)
+            case "$1" in
+                -h|--help)
+                    help
+                    exit 0
+                    ;;
+                --skip-checks)
+                    arg_skipchecks=yes
+                    ;;
+                --set-compiler)
+                    state=compiler
+                    ;;
+                *)
+                    echo "ERROR: unknown argument: $1" 1>&2
+                    exit 1
+                    ;;
+            esac
+            ;;
+        compiler)
+            arg_compiler="$1"
+            state=nil
+            ;;
+    esac
+    shift
+done
+
+if ! [ "$state" = nil ] ; then
+    echo "ERROR: incomplete argument list" 1>&2
+    exit 1
+fi
+
+if [ -n "$arg_compiler" ] ; then
+    CC="$arg_compiler"
+fi
+
+# run checks
+
+if [ -z "$arg_skipchecks" ] ; then
+    if ! check_compiler ; then
+        echo "ERROR: we cannot continue without a proper C compiler" 1>&2
+        exit 1
+    fi
+
+    if ! check_curses ; then
+        echo "$ERROR: we could not compile test source file" 1>&2
+        echo "        Probably missing (n)curses library or the header file." 1>&2
+        echo "        You can try to symlink curses to ncurses or vice versa." 1>&2
+        echo "        Also maybe incompatible compiler options..." 1>&2
+        exit 1
+    else
+        echo "INFO: OK! Test source code successfully compiled!"
+        echo "      We have (n)curses library and header installed."
+    fi
+fi
+
+# run questionnaire
+
+cat <<EOF
+
+******************************************************************************
+This is the configure part of the script where the '${MAKEFILE}' will be
+generated.
+
+Couple of question will follow, each should have some default so if you are
+happy with them then just keep hitting enter, otherwise set the proper
+values.
+
+When you are done, you can run:
+% make install
+
+Or read the README.md for more guidance.
+******************************************************************************
+
+EOF
+
+if [ -f "${MAKEFILE}" ] ; then
+    echo "This will rewrite the current '${MAKEFILE}' - do you wish to continue?"
+    if ! is_yes "Continue with configuration" ; then
+        echo "CONFIGURE: ABORTED"
+        exit 0
+    fi
+fi
+
+# set compiler (again)
+ask_value "C compiler" "$CC"
+CC="$_VALUE"
+
+# set compiler flags
+ask_value "C compiler flags"
+CFLAGS="$_VALUE"
+
+# set compiler flag for (n)curses library
+ask_value "Compiler flag for (n)curses library"
+LIBS="$_VALUE"
+
+# set baka paths
+ask_value "Baka installation directory"
+BAKA_HOME="$_VALUE"
+
+ask_value "Baka config file"
+BAKA_CONFIG="$_VALUE"
+
+ask_value "Baka execution script"
+BAKA_SCRIPT="$_VALUE"
+
+# create customized makefile
+
+for i in CC CFLAGS LIBS BAKA_HOME BAKA_CONFIG BAKA_SCRIPT ; do
+    ivalue=$(eval "echo \"\$${i}\"")
+    if [ -n "$ivalue" ] ; then
+        echo "${i} = ${ivalue}"
+    fi
+done > "$MAKEFILE"
+
+# we do not need empty file...
+if ! [ -s "$MAKEFILE" ] ; then
+    rm -f "$MAKEFILE"
+fi
+
+echo "CONFIGURE: DONE"
+
+exit 0
+
