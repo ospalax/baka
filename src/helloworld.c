@@ -27,6 +27,7 @@ void helloworld_init(T_helloworld *self)
     self->border = FALSE;
     self->colors = FALSE;
     self->caption = "";
+    self->helloworld = helloworld;
 }
 
 void helloworld(T_helloworld *self)

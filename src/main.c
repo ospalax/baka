@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
     screen_init(&screen);
     screen.owner = (void*)&hello;
-    screen.draw = (void (*)(void*))helloworld;
+    screen.draw = (void (*)(void*))hello.helloworld;
 
     // run main loop
     // TODO: this is a fake no-loop

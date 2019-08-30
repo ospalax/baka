@@ -22,6 +22,7 @@ typedef struct t_helloworld
     T_color text_color;
     T_color bg_color;
     char* caption;
+    void (*helloworld)(struct t_helloworld *);
 } T_helloworld;
 
 void helloworld_init(T_helloworld *self);
