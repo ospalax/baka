@@ -148,9 +148,11 @@ Firstly `ncurses` and `libdill` are purely `C` libraries, so `C` language was a 
 
 This project would not exist without [`(n)curses`](https://en.wikipedia.org/wiki/Ncurses) library, which is the successor of the original [`curses`](https://en.wikipedia.org/wiki/Curses_(programming_library)) library - and the word "curses" can mean magic spells or insults in English. Also there is the Czech term *"bakalářská práce"* for the *"bachelor thesis"* (notice the *baka* in the beginning) and Czech is my native language.
 
-When you combine these two things with my healthy interest in Japan then you get: [baka](https://en.wikipedia.org/wiki/Baka_(Japanese_word)) a japanese insult meaning "fool" used so often in the anime.
+When you combine these two things with my healthy interest in Japan then you get: [baka](https://en.wikipedia.org/wiki/Baka_(Japanese_word)) a japanese *"curse"* meaning *"fool"* (used so often in the anime).
 
-And lastly...I am terrible at making up names...did you not notice my username (**ospalax**) - that has also a little bit convoluted history (unsurprisingly, my surname *Ospalý* plays a big role there...).
+So putting it altogether: `(n)curses` means curses/insults, *bakalářská práce* has *baka* in it and that's a popular japanese word for a *curse* - going full circle...
+
+And last but not least...I am *really* terrible at making up names...
 
 
 ## Usage
