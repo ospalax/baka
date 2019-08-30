@@ -67,7 +67,7 @@ check_compiler()
     # custom C compiler
     if [ -n "$CC" ] ; then
         if ! which "$CC" >/dev/null 2>&1 ; then
-            echo "ERROR: ${CC} does not exist (maybe check the PATH)" 1>&2
+            echo "ERROR: '${CC}' does not exist (maybe check the PATH)" 1>&2
             echo "       PATH=${PATH}" 1>&2
             return 1
         else
@@ -91,13 +91,13 @@ check_compiler()
     for i in clang gcc cc ; do
         if which ${i} >/dev/null 2>&1 ; then
             CUSTOM_CC=${i}
-            echo "INFO: ${CUSTOM_CC} was found"
+            echo "INFO: '${CUSTOM_CC}' was found"
             return 0
         fi
     done
 
     if [ -z "$CUSTOM_CC" ] ; then
-        echo "ERROR: no C compiler found" 1>&2
+        echo "ERROR: No C compiler found" 1>&2
         return 1
     fi
 
@@ -200,7 +200,7 @@ while [ -n "$1" ] ; do
                     state=compiler
                     ;;
                 *)
-                    echo "ERROR: unknown argument: $1" 1>&2
+                    echo "ERROR: Unknown argument: $1" 1>&2
                     exit 1
                     ;;
             esac
@@ -214,7 +214,7 @@ while [ -n "$1" ] ; do
 done
 
 if ! [ "$state" = nil ] ; then
-    echo "ERROR: incomplete argument list" 1>&2
+    echo "ERROR: Incomplete argument list" 1>&2
     exit 1
 fi
 
@@ -226,12 +226,12 @@ fi
 
 if [ -z "$arg_skipchecks" ] ; then
     if ! check_compiler ; then
-        echo "ERROR: we cannot continue without a proper C compiler" 1>&2
+        echo "ERROR: We cannot continue without a proper C compiler" 1>&2
         exit 1
     fi
 
     if ! check_curses ; then
-        echo "$ERROR: we could not compile test source file" 1>&2
+        echo "$ERROR: We could not compile test source file" 1>&2
         echo "        Probably missing (n)curses library or the header file." 1>&2
         echo "        You can try to symlink curses to ncurses or vice versa." 1>&2
         echo "        Also maybe incompatible compiler options..." 1>&2
@@ -279,8 +279,12 @@ ask_value "C compiler flags"
 CFLAGS="$_VALUE"
 
 # set compiler flag for (n)curses library
-ask_value "Compiler flag for (n)curses library"
+ask_value "Compiler flag(s) for (n)curses library and others"
 LIBS="$_VALUE"
+
+# set compiler flag(s) for arbitrary header location(s)
+ask_value "Compiler flag(s) for arbitrary header location(s)"
+INCLUDES="$_VALUE"
 
 # set baka paths
 ask_value "Baka installation directory"
@@ -294,7 +298,7 @@ BAKA_SCRIPT="$_VALUE"
 
 # create customized makefile
 
-for i in CC CFLAGS LIBS BAKA_HOME BAKA_CONFIG BAKA_SCRIPT ; do
+for i in CC CFLAGS LIBS INCLUDES BAKA_HOME BAKA_CONFIG BAKA_SCRIPT ; do
     ivalue=$(eval "echo \"\$${i}\"")
     if [ -n "$ivalue" ] ; then
         echo "${i} = ${ivalue}"
