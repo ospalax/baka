@@ -78,8 +78,10 @@ install: release
 	CFLAGS="$(CFLAGS)" \
 	LIBS="$(LIBS)" \
 	INCLUDES="$(INCLUDES)" \
+	SOURCE_DIR="$(SOURCE_DIR)" \
+	BUILD_DIR="$(RELEASE_DIR)" \
 	BAKA_HOME='$(BAKA_HOME)' \
 	BAKA_CONFIG='$(BAKA_CONFIG)' \
 	BAKA_SCRIPT='$(BAKA_SCRIPT)' \
-	tools/install.sh "$(RELEASE_DIR)"
+	tools/install.sh
 	@printf '\n# MAKE -> INSTALLATION DONE\n\n'

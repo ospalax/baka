@@ -11,7 +11,6 @@
 set -e
 
 # Installation artifacts
-BUILD_DIR="$1" # mandatory first argument to this script
 BUILD_ARTIFACTS="bin/baka lib/libbaka.a"
 
 # Executor's target
@@ -69,6 +68,15 @@ for i in ${BUILD_ARTIFACTS} ; do
     fi
 done
 
+# mandatory variables
+for i in CC LIBS SOURCE_DIR BAKA_HOME BAKA_CONFIG BAKA_SCRIPT ; do
+    ivalue=$(eval "echo \"\$${i}\"")
+    if [ -z "$ivalue" ] ; then
+        echo "ERROR: Mandatory variable '${i}' is unset" 1>&2
+        exit 1
+    fi
+done
+
 # install files and directories
 
 # expand values first
@@ -86,6 +94,10 @@ mkdir -p "$_BAKA_HOME"
 
 echo "INFO: Install build artifacts..."
 cp -av "$BUILD_DIR"/bin "$BUILD_DIR"/lib "$_BAKA_HOME"/
+
+# install header files
+echo "INFO: Install header files..."
+cp -av "$SOURCE_DIR"/include "$_BAKA_HOME"/
 
 # install executor target
 echo "INFO: Install main baka script: ${EXECUTOR_TARGET}"
