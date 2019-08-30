@@ -12,6 +12,10 @@
 #define SAFEGUARD__BAKA_H_HEADER__
 // do not put any code BEFORE these two lines
 
+#include "screen.h"
+
+// TODO: THIS IS A STUB - for PoC purposes only
+void main_loop(T_screen *screen);
 
 // do not put any code AFTER this line
 #endif // SAFEGUARD__BAKA_H_HEADER__

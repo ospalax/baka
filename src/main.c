@@ -10,13 +10,35 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ncurses.h>
 
 #include "include/baka.h"
+#include "include/screen.h"
 #include "include/helloworld.h"
 
 int main(int argc, char* argv[])
 {
-    helloworld();
+    // helloworld demo
+    T_helloworld hello;
+
+    helloworld_init(&hello);
+    hello.border = TRUE;
+    hello.border_color = BLUE;
+    hello.text_color = RED;
+    hello.bg_color = BLACK;
+    hello.caption = "(n)curses styled Hello World!";
+
+    // initialize screen
+    T_screen screen;
+
+    screen_init(&screen);
+    screen.owner = (void*)&hello;
+    screen.draw = (void (*)(void*))helloworld;
+
+    // run main loop
+    // TODO: this is a fake no-loop
+    main_loop(&screen);
+
     return EXIT_SUCCESS;
 }
 

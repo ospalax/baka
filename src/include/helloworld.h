@@ -12,7 +12,20 @@
 #define SAFEGUARD__HELLOWORLD_H_HEADER__
 // do not put any code BEFORE these two lines
 
-void helloworld(void);
+#include "screen.h"
+
+typedef struct t_helloworld
+{
+    T_boolean border;
+    T_boolean colors;
+    T_color border_color;
+    T_color text_color;
+    T_color bg_color;
+    char* caption;
+} T_helloworld;
+
+void helloworld_init(T_helloworld *self);
+void helloworld(T_helloworld *self);
 
 // do not put any code AFTER this line
 #endif // SAFEGUARD__HELLOWORLD_H_HEADER__

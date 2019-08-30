@@ -21,6 +21,15 @@
 
 /* Code section */
 
+// TODO: THIS IS A STUB - for PoC purposes only
+void main_loop(T_screen *screen)
+{
+    screen_create(screen);
+    screen_refresh(screen);
+    noecho();
+    getch();
+    screen_destroy(screen);
+}
 
 // last line
 
