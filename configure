@@ -53,11 +53,34 @@ USAGE
     ${CMD} -h|--help
         This help
 
-    ${CMD} [--skip-checks] [--set-compiler <compiler>]
+    ${CMD} [--skip-checks] [--force-overwrite]
+        [--set-compiler <compiler> | --skip-compiler]
+        [--set-cflags <cflags> | --skip-cflags]
+        [--set-libs <libs> | --skip-libs]
+        [--set-includes <includes> | --skip-includes]
+        [--set-installdir <installation> | --skip-installdir]
+        [--set-configfile <config file> | --skip-configfile]
+        [--set-scriptfile <script file> | --skip-scriptfile]
+
         It will run the configure script
 
         --skip-checks:      no avaibility check for compiler or ncurses
+        --force-overwrite:  without asking rewrite the old ${MAKEFILE}
+
         --set-compiler:     set this compiler as default
+        --set-cflags:       set these as cflags
+        --set-libs:         set these as linked libraries
+        --set-includes:     set these as header files locations
+        --set-installdir:   set installation directory for baka tool
+        --set-configfile:   set the path for the baka's config file
+        --set-scriptfile:   set the path for the baka script
+
+        --skip-*:           don't set variable and don't ask about it
+                            (explicit use of defaults from Makefile.config)
+
+        If you wish to run this script completely uninteractively (in
+        scripts for example) then either provide value with '--set-*' option
+        or explicitly skip the questioning with the relevant '--skip-*' arg.
 
 EOF
 }
@@ -184,7 +207,21 @@ ask_value()
 
 state=nil
 arg_skipchecks=
+arg_forceoverwrite=
 arg_compiler=
+arg_compiler_skip=
+arg_cflags=
+arg_cflags_skip=
+arg_libs=
+arg_libs_skip=
+arg_includes=
+arg_includes_skip=
+arg_installdir=
+arg_installdir_skip=
+arg_configfile=
+arg_configfile_skip=
+arg_scriptfile=
+arg_scriptfile_skip=
 while [ -n "$1" ] ; do
     case $state in
         nil)
@@ -196,8 +233,106 @@ while [ -n "$1" ] ; do
                 --skip-checks)
                     arg_skipchecks=yes
                     ;;
+                --force-overwrite)
+                    arg_forceoverwrite=yes
+                    ;;
+                --skip-compiler)
+                    if [ -n "$arg_compiler" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_compiler_skip=yes
+                    ;;
+                --skip-cflags)
+                    if [ -n "$arg_cflags" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_cflags_skip=yes
+                    ;;
+                --skip-libs)
+                    if [ -n "$arg_libs" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_libs_skip=yes
+                    ;;
+                --skip-includes)
+                    if [ -n "$arg_includes" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_includes_skip=yes
+                    ;;
+                --skip-installdir)
+                    if [ -n "$arg_installdir" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_installdir_skip=yes
+                    ;;
+                --skip-configfile)
+                    if [ -n "$arg_configfile" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_configfile_skip=yes
+                    ;;
+                --skip-scriptfile)
+                    if [ -n "$arg_scriptfile" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    arg_scriptfile_skip=yes
+                    ;;
                 --set-compiler)
+                    if [ -n "$arg_compiler_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
                     state=compiler
+                    ;;
+                --set-cflags)
+                    if [ -n "$arg_cflags_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    state=cflags
+                    ;;
+                --set-libs)
+                    if [ -n "$arg_libs_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    state=libs
+                    ;;
+                --set-includes)
+                    if [ -n "$arg_includes_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    state=includes
+                    ;;
+                --set-installdir)
+                    if [ -n "$arg_installdir_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    state=installdir
+                    ;;
+                --set-configfile)
+                    if [ -n "$arg_configfile_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    state=configfile
+                    ;;
+                --set-scriptfile)
+                    if [ -n "$arg_scriptfile_skip" ] ; then
+                        echo "ERROR: Argument mismatch: ${1}" 1>&2
+                        exit 1
+                    fi
+                    state=scriptfile
                     ;;
                 *)
                     echo "ERROR: Unknown argument: $1" 1>&2
@@ -207,6 +342,30 @@ while [ -n "$1" ] ; do
             ;;
         compiler)
             arg_compiler="$1"
+            state=nil
+            ;;
+        cflags)
+            arg_cflags="$1"
+            state=nil
+            ;;
+        libs)
+            arg_libs="$1"
+            state=nil
+            ;;
+        includes)
+            arg_includes="$1"
+            state=nil
+            ;;
+        installdir)
+            arg_installdir="$1"
+            state=nil
+            ;;
+        configfile)
+            arg_configfile="$1"
+            state=nil
+            ;;
+        scriptfile)
+            arg_scriptfile="$1"
             state=nil
             ;;
     esac
@@ -250,9 +409,9 @@ cat <<EOF
 This is the configure part of the script where the '${MAKEFILE}' will be
 generated.
 
-Couple of question will follow, each should have some default so if you are
-happy with them then just keep hitting enter, otherwise set the proper
-values.
+If you did not set or skipped all variables via parameters then couple of
+questions will follow, each should have some default so if you are happy with
+those then just keep hitting enter, otherwise set the proper values.
 
 When you are done, you can run:
 % make install
@@ -262,7 +421,7 @@ Or read the README.md for more guidance.
 
 EOF
 
-if [ -f "${MAKEFILE}" ] ; then
+if [ -f "${MAKEFILE}" ] && [ -z "$arg_forceoverwrite" ] ; then
     echo "This will rewrite the current '${MAKEFILE}' - do you wish to continue?"
     if ! is_yes "Continue with configuration" ; then
         echo "CONFIGURE: ABORTED"
@@ -271,30 +430,58 @@ if [ -f "${MAKEFILE}" ] ; then
 fi
 
 # set compiler (again)
-ask_value "C compiler" "$CC"
-CC="$_VALUE"
+if [ -n "$arg_compiler" ] ; then
+    CC="$arg_compiler"
+elif [ -z "$arg_compiler_skip" ] ; then
+    ask_value "C compiler" "$CC"
+    CC="$_VALUE"
+fi
 
 # set compiler flags
-ask_value "C compiler flags"
-CFLAGS="$_VALUE"
+if [ -n "$arg_cflags" ] ; then
+    CFLAGS="$arg_cflags"
+elif [ -z "$arg_cflags_skip" ] ; then
+    ask_value "C compiler flags"
+    CFLAGS="$_VALUE"
+fi
 
 # set compiler flag for (n)curses library
-ask_value "Compiler flag(s) for (n)curses library and others"
-LIBS="$_VALUE"
+if [ -n "$arg_libs" ] ; then
+    LIBS="$arg_libs"
+elif [ -z "$arg_libs_skip" ] ; then
+    ask_value "Compiler flag(s) for (n)curses library and others"
+    LIBS="$_VALUE"
+fi
 
 # set compiler flag(s) for arbitrary header location(s)
-ask_value "Compiler flag(s) for arbitrary header location(s)"
-INCLUDES="$_VALUE"
+if [ -n "$arg_includes" ] ; then
+    INCLUDES="$arg_includes"
+elif [ -z "$arg_includes_skip" ] ; then
+    ask_value "Compiler flag(s) for arbitrary header location(s)"
+    INCLUDES="$_VALUE"
+fi
 
 # set baka paths
-ask_value "Baka installation directory"
-BAKA_HOME="$_VALUE"
+if [ -n "$arg_installdir" ] ; then
+    BAKA_HOME="$arg_installdir"
+elif [ -z "$arg_installdir_skip" ] ; then
+    ask_value "Baka installation directory"
+    BAKA_HOME="$_VALUE"
+fi
 
-ask_value "Baka config file"
-BAKA_CONFIG="$_VALUE"
+if [ -n "$arg_configfile" ] ; then
+    BAKA_CONFIG="$arg_configfile"
+elif [ -z "$arg_configfile_skip" ] ; then
+    ask_value "Baka config file"
+    BAKA_CONFIG="$_VALUE"
+fi
 
-ask_value "Baka execution script"
-BAKA_SCRIPT="$_VALUE"
+if [ -n "$arg_scriptfile" ] ; then
+    BAKA_SCRIPT="$arg_scriptfile"
+elif [ -z "$arg_scriptfile_skip" ] ; then
+    ask_value "Baka execution script"
+    BAKA_SCRIPT="$_VALUE"
+fi
 
 # create customized makefile
 
