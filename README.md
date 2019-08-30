@@ -17,6 +17,10 @@ Proof of Concept - early stage of development.
 
 ## Quick Start
 
+### DISCLAIMER
+
+This is still **VERY** *Work-In-Progress* codebase and as of yet no practical application. This project is just capable of building and installing itself (build toolchain is almost worked out) and the created binary is just a (n)curses *helloworld* example for now.
+
 If you are in a hurry or don't want to read anything more:
 
 1. `% git clone https://github.com/ospalax/baka.git`
@@ -48,7 +52,6 @@ Basically you need:
 * `ncurses.h` header file (`/usr/include/ncurses.h` most likely)
 
 The **`configure`** script will test it for you.
-
 
 ## Introduction
 
