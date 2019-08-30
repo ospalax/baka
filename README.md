@@ -15,6 +15,40 @@
 
 Proof of Concept - early stage of development.
 
+## Quick Start
+
+If you are in a hurry or don't want to read anything more:
+
+1. `% git clone https://github.com/ospalax/baka.git`
+1. `% cd baka`
+1. `% ./configure`
+1. `% make install`
+
+If you want to skip the **`configure`** part then at least check out the **`Makefile.config`** so you will not be surprised about installation destinations - by default these are used:
+
+* `${HOME}/.baka/{bin,lib,include}` .. installation directory
+* `${HOME}/.baka/config` .. configuration file
+* `${HOME}/bin/baka` .. system command - the directory should be in your `PATH` otherwise it will not be much of use
+
+You can adjust the build process little more by using the **`configure`** script:
+
+```
+% ./configure --help
+```
+
+The script is *without any arguments* interactive and will ask a few questions - this is intended. I did not wish to hide anything from the user and with this approach I tried to eliminate any nasty surprises (overwritten files etc.). So by *using the configure step* the build will not silently use defaults - you must be explicit and set or sanction the values.
+
+This project has very little requirements, so if your system has one of these compilers: `cc`, `gcc` or `clang` and it has installed `ncurses` package (library and its *dev* counterpart) then you should be fine.
+
+Basically you need:
+
+* `*NIX` system (Linux, \*BSD etc.)
+* `terminal` with `shell` (`xterm` + `bash` for example)
+* `C` compiler (one of these: `gcc`/`clang`)
+* `ncurses.h` header file (`/usr/include/ncurses.h` most likely)
+
+The **`configure`** script will test it for you.
+
 
 ## Introduction
 
